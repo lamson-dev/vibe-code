@@ -1,6 +1,13 @@
-import { format } from "date-fns";
+import { format, parseISO, getQuarter } from "date-fns";
 import fs from "fs";
 import path from "path";
+
+export function formatYearQuarter(dateString: string): string {
+  const date = parseISO(dateString);
+  const year = date.getFullYear();
+  const quarter = getQuarter(date);
+  return `Q${quarter}-${year}`;
+}
 
 export async function writeResultsJson<T>(
   results: T[],

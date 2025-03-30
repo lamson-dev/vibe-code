@@ -53,7 +53,8 @@ export async function readOriginalCsv(
 
 export async function writeAugmentedCsv(
   originalRecords: CsvRecord[],
-  verificationResults: VerificationResult[]
+  verificationResults: VerificationResult[],
+  outputPath: string
 ): Promise<void> {
   try {
     // Create a map of verification results by client_user_id
@@ -78,16 +79,9 @@ export async function writeAugmentedCsv(
       };
     });
 
-    // Create output directory if it doesn't exist
-    const outputDir = path.join(process.cwd(), "output");
+    // Ensure output directory exists
+    const outputDir = path.dirname(outputPath);
     await fs.mkdir(outputDir, { recursive: true });
-
-    // Generate filename with timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const outputFile = path.join(
-      outputDir,
-      `augmented-verification-results-${timestamp}.csv`
-    );
 
     // Convert records to CSV format
     const originalHeaders = Object.keys(originalRecords[0]);
@@ -100,7 +94,7 @@ export async function writeAugmentedCsv(
       "last_name",
       ...originalHeaders.slice(hitsIndex + 1),
     ];
-    
+
     const csvRows = augmentedRecords.map((record) =>
       headers.map((header) => record[header as keyof AugmentedCsvRecord] || "")
     );
@@ -111,8 +105,8 @@ export async function writeAugmentedCsv(
       ...csvRows.map((row) => row.join(",")),
     ].join("\n");
 
-    await fs.writeFile(outputFile, csvContent);
-    console.log(`Successfully wrote augmented CSV to ${outputFile}`);
+    await fs.writeFile(outputPath, csvContent);
+    console.log(`Successfully wrote augmented CSV to ${outputPath}`);
   } catch (error) {
     console.error("Error writing augmented CSV:", error);
     throw error;

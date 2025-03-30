@@ -25,7 +25,8 @@ const CSV_FILE_NAME = "scrrep_8zaPSPdunqVjS4.csv.csv";
 
 export async function augmentCsvWithVerificationResults(
   results: VerificationResult[],
-  csvFileName: string
+  csvFileName: string,
+  outputPath: string
 ): Promise<void> {
   try {
     // Read original CSV for augmentation
@@ -34,7 +35,7 @@ export async function augmentCsvWithVerificationResults(
 
     // Write augmented CSV
     console.log("Writing augmented CSV with verification results...");
-    await writeAugmentedCsv(originalRecords, results);
+    await writeAugmentedCsv(originalRecords, results, outputPath);
   } catch (error) {
     console.error("Failed to augment CSV with verification results:", error);
     throw error;

@@ -14,6 +14,7 @@ import {
 import { readCustomerReferences } from "./plaid-process-csv.js";
 import { augmentCsvWithVerificationResults } from "./plaid-exporter.js";
 import { processMiddeskData } from "./middesk-process-csv.js";
+import { formatYearQuarter } from "./utils.js";
 
 // Load environment variables
 config();
@@ -42,6 +43,7 @@ async function runExporters() {
     );
 
     const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
+    const yearQuarter = formatYearQuarter(endDateStr);
 
     // Write Plaid results to JSON
     console.log("\n=== Writing Plaid Results ===");
@@ -49,7 +51,16 @@ async function runExporters() {
 
     // Augment CSV with Plaid results
     console.log("\n=== Augmenting CSV with Plaid Results ===");
-    await augmentCsvWithVerificationResults(plaidResults, CSV_FILE_NAME);
+    const plaidOutputPath = path.join(
+      process.cwd(),
+      "output",
+      `CIP Results - ${yearQuarter}.csv`
+    );
+    await augmentCsvWithVerificationResults(
+      plaidResults,
+      CSV_FILE_NAME,
+      plaidOutputPath
+    );
 
     // Run Middesk exporter
     console.log("\n=== Running Middesk Business Export ===");
@@ -65,7 +76,7 @@ async function runExporters() {
     const outputPath = path.join(
       process.cwd(),
       "output",
-      `OFAC Results - ${format(endDate, "yyyy-MM")}.csv`
+      `OFAC Results - ${yearQuarter}.csv`
     );
     await processMiddeskData(middeskResults, outputPath);
 

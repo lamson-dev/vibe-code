@@ -1,0 +1,28 @@
+{
+  "name": "@vibe-code/plaid-verification-exporter",
+  "version": "1.0.0",
+  "description": "Script to export Plaid Identity Verification results",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "plaid": "^18.2.0",
+    "dotenv": "^16.4.1",
+    "date-fns": "^3.3.1",
+    "csv-parse": "^5.5.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/dotenv": "^8.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "keywords": ["plaid", "identity", "verification", "export"],
+  "author": "",
+  "license": "ISC"
+} 

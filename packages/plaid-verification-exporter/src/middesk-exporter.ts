@@ -1,6 +1,8 @@
 import axios from "axios";
 import dotenv from "dotenv";
 import { format, parseISO } from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { format as formatDate } from "date-fns";
 import fs from "fs";
 import path from "path";
 
@@ -13,11 +15,20 @@ const MIDDESK_API_BASE_URL =
     ? "https://api.middesk.com/v1"
     : "https://api-sandbox.middesk.com/v1";
 
+const TIME_ZONE = "America/New_York"; // US Eastern Time
+
 interface MiddeskBusiness {
   id: string;
   name: string;
   created_at: string;
   // Add other fields as needed
+}
+
+interface MiddeskResponse {
+  object: string;
+  data: MiddeskBusiness[];
+  has_more: boolean;
+  total_count: number;
 }
 
 async function getBusinesses(
@@ -41,32 +52,28 @@ async function getBusinesses(
         params: {
           page,
           per_page: PER_PAGE,
+          start_date: formatDate(
+            toZonedTime(startDate, TIME_ZONE),
+            "yyyy-MM-dd"
+          ),
+          end_date: formatDate(toZonedTime(endDate, TIME_ZONE), "yyyy-MM-dd"),
         },
       });
 
+      const apiResponse = response.data as MiddeskResponse;
+
       // Check if we have data in the response
-      if (
-        !response.data ||
-        response.data.object !== "list" ||
-        !Array.isArray(response.data.data)
-      ) {
-        console.log("No more businesses to fetch", response.data);
+      if (!apiResponse || !Array.isArray(apiResponse.data)) {
+        console.log("No more businesses to fetch", apiResponse);
         hasMore = false;
         break;
       }
 
-      // Filter businesses by date range
-      const filteredBusinesses = response.data.data.filter(
-        (business: MiddeskBusiness) => {
-          const businessDate = parseISO(business.created_at);
-          return businessDate >= startDate && businessDate <= endDate;
-        }
-      );
+      // No need to filter by date since we're using API parameters
+      businesses.push(...apiResponse.data);
 
-      businesses.push(...filteredBusinesses);
-
-      // If we got less than PER_PAGE items, we've reached the end
-      hasMore = response.data.length === PER_PAGE;
+      // Check if there are more pages based on the API response
+      hasMore = apiResponse.has_more;
       page++;
 
       // Add a small delay to avoid rate limiting
@@ -109,11 +116,15 @@ async function exportMiddeskBusinesses(startDate: Date, endDate: Date) {
   try {
     console.log("Fetching businesses...");
     console.log(
-      `Date range: ${format(startDate, "yyyy-MM-dd")} to ${format(
-        endDate,
+      `Date range: ${formatDate(
+        toZonedTime(startDate, TIME_ZONE),
         "yyyy-MM-dd"
-      )}`
+      )} to ${formatDate(
+        toZonedTime(endDate, TIME_ZONE),
+        "yyyy-MM-dd"
+      )} (${TIME_ZONE})`
     );
+
     const businesses = await getBusinesses(startDate, endDate);
     console.log(
       `Found ${businesses.length} businesses in the specified date range`
@@ -133,17 +144,18 @@ async function exportMiddeskBusinesses(startDate: Date, endDate: Date) {
 
     const outputFile = path.join(
       outputDir,
-      `middesk-businesses-${format(startDate, "yyyy-QQ")}.json`
+      `middesk-businesses-${format(endDate, "yyyy-QQ")}.json`
     );
 
     // Fetch detailed information for each business
     console.log("\nFetching detailed information for each business...");
     const detailedBusinesses = await Promise.all(
       businesses.map(async (business, index) => {
+        const createdAt = toZonedTime(parseISO(business.created_at), TIME_ZONE);
         console.log(
           `Processing business ${index + 1}/${businesses.length}: ${
             business.name
-          }`
+          } (Created: ${formatDate(createdAt, "yyyy-MM-dd")})`
         );
         const details = await getBusinessDetails(business.id);
         // Add a small delay to avoid rate limiting
@@ -167,7 +179,14 @@ async function exportMiddeskBusinesses(startDate: Date, endDate: Date) {
 
 // Example usage:
 // For Q1 2025 (Jan 1, 2025 to Mar 31, 2025)
-const startDate = new Date("2025-01-01");
-const endDate = new Date("2025-03-31");
+// Using US Eastern Time (ET)
+const startDate = fromZonedTime("2025-01-01 00:00:00", TIME_ZONE);
+const endDate = fromZonedTime("2025-03-31 23:59:59", TIME_ZONE);
+
+console.log("Using date range:", {
+  start: formatDate(toZonedTime(startDate, TIME_ZONE), "yyyy-MM-dd HH:mm:ss"),
+  end: formatDate(toZonedTime(endDate, TIME_ZONE), "yyyy-MM-dd HH:mm:ss"),
+  timeZone: TIME_ZONE,
+});
 
 exportMiddeskBusinesses(startDate, endDate);

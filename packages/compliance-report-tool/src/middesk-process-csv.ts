@@ -4,35 +4,11 @@ import fs from "fs";
 import path from "path";
 import { stringify } from "csv-stringify/sync";
 import { parseISO, getQuarter } from "date-fns";
+import { MiddeskBusiness } from "./types/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-interface MiddeskBusiness {
-  object: string;
-  id: string;
-  name: string;
-  created_at: string;
-  status: string;
-  tin: {
-    tin: string;
-  };
-  review: {
-    tasks: Array<{
-      category: string;
-      key: string;
-      label: string;
-      message: string;
-      status: string;
-      sources?: Array<{
-        type: string;
-        metadata?: {
-          full_address?: string;
-        };
-      }>;
-    }>;
-  };
-}
 
 function formatYearQuarter(dateString: string): string {
   const date = parseISO(dateString);

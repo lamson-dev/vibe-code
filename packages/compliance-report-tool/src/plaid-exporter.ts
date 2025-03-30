@@ -3,11 +3,7 @@ import {
   initializePlaidClient,
   getVerificationResults,
 } from "./services/plaid.js";
-import {
-  readOriginalCsv,
-  writeAugmentedCsv,
-  readCustomerReferences,
-} from "./plaid-process-csv.js";
+import { readCustomerReferences } from "./plaid-process-csv.js";
 import { VerificationResult } from "./types/index.js";
 import { format } from "date-fns";
 import fs from "fs";
@@ -21,25 +17,6 @@ import { fileURLToPath } from "url";
 
 const TIME_ZONE = "America/New_York"; // US Eastern Time
 const CSV_FILE_NAME = "scrrep_8zaPSPdunqVjS4.csv.csv";
-
-export async function augmentCsvWithVerificationResults(
-  results: VerificationResult[],
-  csvFileName: string,
-  outputPath: string
-): Promise<void> {
-  try {
-    // Read original CSV for augmentation
-    console.log("Reading original CSV file for augmentation...");
-    const originalRecords = await readOriginalCsv(csvFileName);
-
-    // Write augmented CSV
-    console.log("Writing augmented CSV with verification results...");
-    await writeAugmentedCsv(originalRecords, results, outputPath);
-  } catch (error) {
-    console.error("Failed to augment CSV with verification results:", error);
-    throw error;
-  }
-}
 
 export async function exportPlaidVerificationResults(
   startDate: string,

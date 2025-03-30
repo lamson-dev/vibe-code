@@ -11,8 +11,12 @@ import {
   exportMiddeskBusinesses,
   writeMiddeskResultsJson,
 } from "./middesk-exporter.js";
-import { readCustomerReferences } from "./plaid-process-csv.js";
-import { augmentCsvWithVerificationResults } from "./plaid-exporter.js";
+import {
+  readCustomerReferences,
+  writeOfacCsv,
+  writeCipCsv,
+  readOriginalCsv,
+} from "./plaid-process-csv.js";
 import { processMiddeskData } from "./middesk-process-csv.js";
 import { formatYearQuarter } from "./utils.js";
 
@@ -31,10 +35,15 @@ async function runExporters() {
     console.log("Starting compliance data export process...");
     console.log(`Date range: ${startDateStr} to ${endDateStr}`);
 
+    // Read original CSV records
+    console.log("\n=== Reading Original CSV ===");
+    const originalRecords = await readOriginalCsv(CSV_FILE_NAME);
+    console.log(`Found ${originalRecords.length} records`);
+
     // Get customer references for Plaid export
     const customerRefs = await readCustomerReferences(CSV_FILE_NAME);
 
-    // Run Plaid exporter
+    // 1. Run Plaid exporter
     console.log("\n=== Running Plaid Verification Export ===");
     const plaidResults = await exportPlaidVerificationResults(
       startDateStr,
@@ -47,40 +56,40 @@ async function runExporters() {
 
     // Write Plaid results to JSON
     console.log("\n=== Writing Plaid Results ===");
-    // await writePlaidResultsJson(plaidResults, endDate);
+    await writePlaidResultsJson(plaidResults, endDate);
 
-    // Augment CSV with Plaid results
-    console.log("\n=== Augmenting CSV with Plaid Results ===");
-    const plaidOutputPath = path.join(
+    // 2. Write OFAC CSV (augmented from original records)
+    console.log("\n=== Writing OFAC CSV ===");
+    const ofacOutputPath = path.join(
+      process.cwd(),
+      "output",
+      `OFAC Results - ${yearQuarter}.csv`
+    );
+    await writeOfacCsv(originalRecords, plaidResults, ofacOutputPath);
+
+    // 3. Write initial CIP CSV (from Plaid results)
+    console.log("\n=== Writing Initial CIP CSV ===");
+    const cipOutputPath = path.join(
       process.cwd(),
       "output",
       `CIP Results - ${yearQuarter}.csv`
     );
-    await augmentCsvWithVerificationResults(
-      plaidResults,
-      CSV_FILE_NAME,
-      plaidOutputPath
-    );
+    await writeCipCsv(plaidResults, [], cipOutputPath);
 
-    // Run Middesk exporter
+    // 4. Run Middesk exporter
     console.log("\n=== Running Middesk Business Export ===");
     const startDate = fromZonedTime(`${startDateStr} 00:00:00`, TIME_ZONE);
     const middeskResults = await exportMiddeskBusinesses(startDate, endDate);
 
     // Write Middesk results to JSON
     console.log("\n=== Writing Middesk Results ===");
-    // await writeMiddeskResultsJson(middeskResults, endDate);
+    await writeMiddeskResultsJson(middeskResults, endDate);
 
-    // Process Middesk data to CSV
-    console.log("\n=== Processing Middesk Data to CSV ===");
-    const outputPath = path.join(
-      process.cwd(),
-      "output",
-      `OFAC Results - ${yearQuarter}.csv`
-    );
-    await processMiddeskData(middeskResults, outputPath);
+    // // 5. Update CIP CSV with business data
+    // console.log("\n=== Updating CIP CSV with Business Data ===");
+    // await writeCipCsv(plaidResults, middeskResults, cipOutputPath);
 
-    console.log("\nAll exports completed successfully!");
+    // console.log("\nAll exports completed successfully!");
   } catch (error) {
     console.error("Export process failed:", error);
     process.exit(1);

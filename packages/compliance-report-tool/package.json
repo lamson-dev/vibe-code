@@ -1,5 +1,5 @@
 {
-  "name": "@vibe-code/plaid-verification-exporter",
+  "name": "@vibe-code/compliance-report-tool",
   "version": "1.0.0",
   "description": "Script to export Plaid Identity Verification results",
   "main": "dist/index.js",
@@ -8,6 +8,7 @@
     "build": "tsc --project tsconfig.json",
     "start": "node dist/index.js",
     "dev": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
+    "plaid:export": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
     "middesk:export": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/middesk-exporter.ts",
     "middesk:test": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/test-middesk.ts",
     "middesk:process-csv": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/process-middesk.ts",

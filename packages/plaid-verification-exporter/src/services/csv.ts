@@ -94,11 +94,17 @@ export async function writeAugmentedCsv(
     );
 
     // Convert records to CSV format
+    const originalHeaders = Object.keys(originalRecords[0]);
+    const hitsIndex = originalHeaders.indexOf("hits");
+
+    // Insert first_name and last_name after status and hits
     const headers = [
-      ...Object.keys(originalRecords[0]),
+      ...originalHeaders.slice(0, hitsIndex + 1),
       "first_name",
       "last_name",
+      ...originalHeaders.slice(hitsIndex + 1),
     ];
+    
     const csvRows = augmentedRecords.map((record) =>
       headers.map((header) => record[header as keyof AugmentedCsvRecord] || "")
     );

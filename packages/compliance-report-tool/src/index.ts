@@ -41,10 +41,11 @@ async function runExporters() {
       customerRefs
     );
 
+    const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
+
     // Write Plaid results to JSON
     console.log("\n=== Writing Plaid Results ===");
-    const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
-    await writePlaidResultsJson(plaidResults, endDate);
+    // await writePlaidResultsJson(plaidResults, endDate);
 
     // Augment CSV with Plaid results
     console.log("\n=== Augmenting CSV with Plaid Results ===");
@@ -57,14 +58,14 @@ async function runExporters() {
 
     // Write Middesk results to JSON
     console.log("\n=== Writing Middesk Results ===");
-    await writeMiddeskResultsJson(middeskResults, endDate);
+    // await writeMiddeskResultsJson(middeskResults, endDate);
 
     // Process Middesk data to CSV
     console.log("\n=== Processing Middesk Data to CSV ===");
     const outputPath = path.join(
       process.cwd(),
       "output",
-      `processed-middesk-data-${format(endDate, "yyyy-MM")}.csv`
+      `OFAC Results - ${format(endDate, "yyyy-MM")}.csv`
     );
     await processMiddeskData(middeskResults, outputPath);
 

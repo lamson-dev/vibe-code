@@ -8,13 +8,11 @@ import {
 } from "../types/index.js";
 import { format } from "date-fns";
 
-export async function readCustomerReferences(): Promise<string[]> {
+export async function readCustomerReferences(
+  csvFileName: string
+): Promise<string[]> {
   try {
-    const csvPath = path.join(
-      process.cwd(),
-      "input",
-      "scrrep_8zaPSPdunqVjS4.csv.csv"
-    );
+    const csvPath = path.join(process.cwd(), "input", csvFileName);
     const csvContent = await fs.readFile(csvPath, "utf-8");
     const records = parse(csvContent, {
       columns: true,
@@ -35,13 +33,11 @@ export async function readCustomerReferences(): Promise<string[]> {
   }
 }
 
-export async function readOriginalCsv(): Promise<CsvRecord[]> {
+export async function readOriginalCsv(
+  csvFileName: string
+): Promise<CsvRecord[]> {
   try {
-    const csvPath = path.join(
-      process.cwd(),
-      "input",
-      "scrrep_8zaPSPdunqVjS4.csv.csv"
-    );
+    const csvPath = path.join(process.cwd(), "input", csvFileName);
     const csvContent = await fs.readFile(csvPath, "utf-8");
     const records = parse(csvContent, {
       columns: true,

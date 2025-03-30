@@ -10,9 +10,10 @@
     "dev": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
     "export:all": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
     "plaid:export": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
+    "plaid:test": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/test-plaid.ts",
     "middesk:export": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/middesk-exporter.ts",
     "middesk:test": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/test-middesk.ts",
-    "middesk:process-csv": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/process-middesk.ts",
+    "middesk:process-csv": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/middesk-process-csv.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

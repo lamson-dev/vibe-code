@@ -1,16 +1,48 @@
 import { validateEnv } from "./utils/env.js";
-import { initializePlaidClient } from "./services/plaid.js";
-import { getVerificationResults } from "./services/verification.js";
+import {
+  initializePlaidClient,
+  getVerificationResults,
+} from "./services/plaid.js";
 import {
   readOriginalCsv,
   writeAugmentedCsv,
   writeVerificationResultsJson,
-} from "./services/csv.js";
+} from "./plaid-process-csv.js";
+import { VerificationResult } from "./types/index.js";
+import { format } from "date-fns";
+import fs from "fs";
+import path from "path";
+import { parse } from "csv-parse/sync";
+import { stringify } from "csv-stringify/sync";
+import { writeResultsJson } from "./utils.js";
+
+export async function augmentCsvWithVerificationResults(
+  results: VerificationResult[],
+  csvFileName: string
+): Promise<void> {
+  try {
+    // Read original CSV for augmentation
+    console.log("Reading original CSV file for augmentation...");
+    const originalRecords = await readOriginalCsv(csvFileName);
+
+    // Write augmented CSV
+    console.log("Writing augmented CSV with verification results...");
+    await writeAugmentedCsv(originalRecords, results);
+
+    // Write results to JSON file
+    console.log("Writing results to JSON file...");
+    await writeVerificationResultsJson(results);
+  } catch (error) {
+    console.error("Failed to augment CSV with verification results:", error);
+    throw error;
+  }
+}
 
 export async function exportPlaidVerificationResults(
   startDate: string,
-  endDate: string
-): Promise<void> {
+  endDate: string,
+  customerRefs: string[]
+): Promise<VerificationResult[]> {
   try {
     // Validate environment variables
     const env = validateEnv();
@@ -22,13 +54,6 @@ export async function exportPlaidVerificationResults(
       `Fetching Plaid verification results from ${startDate} to ${endDate}...`
     );
 
-    // Read original CSV
-    console.log("Reading original CSV file...");
-    const originalRecords = await readOriginalCsv();
-
-    const customerRefs = originalRecords.map(
-      (record) => record.customer_reference
-    );
     // Get verification results
     const results = await getVerificationResults(
       plaidClient,
@@ -37,17 +62,17 @@ export async function exportPlaidVerificationResults(
       customerRefs
     );
 
-    // Write augmented CSV
-    console.log("Writing augmented CSV with verification results...");
-    await writeAugmentedCsv(originalRecords, results);
-
-    // Write results to JSON file
-    console.log("Writing results to JSON file...");
-    await writeVerificationResultsJson(results);
-
     console.log("Plaid export completed successfully");
+    return results;
   } catch (error) {
     console.error("Failed to export Plaid verification results:", error);
     throw error;
   }
+}
+
+export async function writePlaidResultsJson(
+  results: any[],
+  endDate: Date
+): Promise<void> {
+  return writeResultsJson(results, endDate, "plaid-verification-results");
 }

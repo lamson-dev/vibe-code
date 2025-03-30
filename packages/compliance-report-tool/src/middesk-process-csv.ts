@@ -41,13 +41,8 @@ function formatYearQuarter(dateString: string): string {
   return `${year}-Q${quarter}`;
 }
 
-function processMiddeskData(inputPath: string, outputPath: string) {
-  // Read the JSON file
-  const fileContent = fs.readFileSync(inputPath, "utf-8");
-  const businesses = JSON.parse(fileContent) as MiddeskBusiness[];
-
-  // Process each record
-  const processedRecords = businesses.map((business) => {
+function processBusinesses(businesses: MiddeskBusiness[]) {
+  return businesses.map((business) => {
     // Find the address task with a successful match
     const addressTask = business.review.tasks.find(
       (task) =>
@@ -70,34 +65,55 @@ function processMiddeskData(inputPath: string, outputPath: string) {
       status: business.status,
     };
   });
-
-  // Write to CSV
-  const output = stringify(processedRecords, {
-    header: true,
-    columns: [
-      "#",
-      "Business Name",
-      "Business Physical Address",
-      "EIN",
-      "Onboard Date",
-      "created_at",
-      "status",
-    ],
-  });
-
-  fs.writeFileSync(outputPath, output);
-  console.log(`Processed CSV written to ${outputPath}`);
 }
 
-// Example usage
-const inputFile = path.join(
-  process.cwd(),
-  "output",
-  "middesk-businesses-2025-01.json"
-);
-const outputFile = path.join(
-  process.cwd(),
-  "output",
-  "processed-middesk-data.csv"
-);
-processMiddeskData(inputFile, outputFile);
+export async function processMiddeskData(
+  input: string | MiddeskBusiness[],
+  outputPath: string
+): Promise<void> {
+  try {
+    // Get businesses data either from file or direct input
+    const businesses: MiddeskBusiness[] =
+      typeof input === "string"
+        ? JSON.parse(fs.readFileSync(input, "utf-8"))
+        : input;
+
+    // Process the records
+    const processedRecords = processBusinesses(businesses);
+
+    // Write to CSV
+    const output = stringify(processedRecords, {
+      header: true,
+      columns: [
+        "#",
+        "Business Name",
+        "Business Physical Address",
+        "EIN",
+        "Onboard Date",
+        "created_at",
+        "status",
+      ],
+    });
+
+    fs.writeFileSync(outputPath, output);
+    console.log(`Processed CSV written to ${outputPath}`);
+  } catch (error) {
+    console.error("Error processing Middesk data:", error);
+    throw error;
+  }
+}
+
+// Example usage when running directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const inputFile = path.join(
+    process.cwd(),
+    "output",
+    "middesk-businesses-2025-01.json"
+  );
+  const outputFile = path.join(
+    process.cwd(),
+    "output",
+    "processed-middesk-data.csv"
+  );
+  processMiddeskData(inputFile, outputFile);
+}

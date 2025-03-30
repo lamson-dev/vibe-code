@@ -1,3 +1,5 @@
+import { IdentityVerification } from "plaid";
+
 export interface EnvVars {
   PLAID_CLIENT_ID: string;
   PLAID_SECRET: string;
@@ -10,8 +12,9 @@ export interface CsvRecord {
   // Add other fields as needed
 }
 
-export interface VerificationResult {
-  client_user_id: string;
-  created_at: string;
-  // Add other fields as needed
+export type VerificationResult = IdentityVerification;
+
+export interface AugmentedCsvRecord extends CsvRecord {
+  first_name?: string;
+  last_name?: string;
 }

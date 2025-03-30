@@ -5,6 +5,11 @@ import path from "path";
 import { validateEnv } from "./utils/env.js";
 import { initializePlaidClient } from "./services/plaid.js";
 import { getVerificationResults } from "./services/verification.js";
+import {
+  readOriginalCsv,
+  writeAugmentedCsv,
+  writeVerificationResultsJson,
+} from "./services/csv.js";
 
 // Load environment variables
 config();
@@ -25,29 +30,30 @@ async function exportVerificationResults(): Promise<void> {
       `Fetching verification results from ${startDate} to ${endDate}...`
     );
 
+    // Read original CSV
+    console.log("Reading original CSV file...");
+    const originalRecords = await readOriginalCsv();
+
+    const customerRefs = originalRecords.map(
+      (record) => record.customer_reference
+    );
+    // Get verification results
     const results = await getVerificationResults(
       plaidClient,
       startDate,
-      endDate
+      endDate,
+      customerRefs
     );
 
-    // Create output directory if it doesn't exist
-    const outputDir = path.join(process.cwd(), "output");
-    await fs.mkdir(outputDir, { recursive: true });
+    // Write augmented CSV
+    console.log("Writing augmented CSV with verification results...");
+    await writeAugmentedCsv(originalRecords, results);
 
-    // Generate filename with timestamp
-    const timestamp = format(new Date(), "yyyy-MM-dd-HH-mm-ss");
-    const outputFile = path.join(
-      outputDir,
-      `verification-results-${timestamp}.json`
-    );
+    // Write results to JSON file
+    console.log("Writing results to JSON file...");
+    await writeVerificationResultsJson(results);
 
-    // Write results to file
-    await fs.writeFile(outputFile, JSON.stringify(results, null, 2));
-
-    console.log(
-      `Successfully exported ${results.length} verification results to ${outputFile}`
-    );
+    console.log("Export completed successfully");
   } catch (error) {
     console.error("Failed to export verification results:", error);
     process.exit(1);

@@ -6,15 +6,9 @@ export async function getVerificationResults(
   plaidClient: PlaidApi,
   startDate: string,
   endDate: string,
-  limit: number = 100
+  customerRefs: string[]
 ): Promise<VerificationResult[]> {
   try {
-    // Read customer references from CSV
-    const customerRefs = await readCustomerReferences();
-    console.log(
-      `Processing verification results for ${customerRefs.length} customers`
-    );
-
     // Get verification results for each customer
     const allResults: VerificationResult[] = [];
     for (const customerRef of customerRefs) {

@@ -5,7 +5,7 @@ import {
   CsvRecord,
   VerificationResult,
   AugmentedCsvRecord,
-} from "../types/index.js";
+} from "./types/index.js";
 import { format } from "date-fns";
 
 export async function readCustomerReferences(

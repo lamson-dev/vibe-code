@@ -2,10 +2,7 @@ import { config } from "dotenv";
 import { format, parseISO } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { fileURLToPath } from "url";
-import fs from "fs";
-import path from "path";
 import { getBusinesses, getBusinessDetails } from "./services/middesk.js";
-import { processMiddeskData } from "./middesk-process-csv.js";
 import { writeResultsJson } from "./utils.js";
 
 const TIME_ZONE = "America/New_York"; // US Eastern Time
@@ -96,15 +93,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       // Write Middesk results to JSON
       console.log("\n=== Writing Middesk Results ===");
       await writeMiddeskResultsJson(middeskResults, endDate);
-
-      // Process Middesk data to CSV
-      console.log("\n=== Processing Middesk Data to CSV ===");
-      const outputPath = path.join(
-        process.cwd(),
-        "output",
-        `processed-middesk-data-${format(endDate, "yyyy-MM")}.csv`
-      );
-      await processMiddeskData(middeskResults, outputPath);
 
       console.log("\nMiddesk export completed successfully!");
     } catch (error) {

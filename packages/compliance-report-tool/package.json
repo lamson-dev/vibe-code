@@ -1,20 +1,21 @@
 {
   "name": "@vibe-code/compliance-report-tool",
   "version": "1.0.0",
-  "description": "Script to export Plaid Identity Verification results",
+  "description": "Tool for generating compliance reports from various data sources",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc",
     "start": "node dist/index.js",
     "dev": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
     "export:all": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
-    "plaid:export": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
-    "plaid:test": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/test-plaid.ts",
-    "middesk:export": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/middesk-exporter.ts",
-    "middesk:test": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/test-middesk.ts",
-    "middesk:process-csv": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/middesk-process-csv.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "plaid:export": "tsx src/plaid-exporter.ts",
+    "plaid:process": "tsx src/plaid-process-csv.ts",
+    "plaid:test": "tsx src/test-plaid.ts",
+    "middesk:export": "tsx src/middesk-exporter.ts",
+    "middesk:process": "tsx src/middesk-process-csv.ts",
+    "middesk:test": "tsx src/test-middesk.ts",
+    "test": "jest"
   },
   "dependencies": {
     "axios": "^1.8.4",
@@ -29,6 +30,7 @@
     "@types/dotenv": "^8.2.0",
     "@types/node": "^20.11.19",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
     "typescript": "^5.3.3"
   },
   "keywords": [

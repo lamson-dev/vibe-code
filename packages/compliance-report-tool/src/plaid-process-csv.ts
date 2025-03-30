@@ -7,6 +7,8 @@ import {
   AugmentedCsvRecord,
 } from "./types/index.js";
 import { format } from "date-fns";
+import { fileURLToPath } from "url";
+import { config } from "dotenv";
 
 export async function readCustomerReferences(
   csvFileName: string
@@ -113,26 +115,54 @@ export async function writeAugmentedCsv(
   }
 }
 
-export async function writeVerificationResultsJson(
-  results: VerificationResult[]
-): Promise<void> {
-  try {
-    // Create output directory if it doesn't exist
-    const outputDir = path.join(process.cwd(), "output");
-    await fs.mkdir(outputDir, { recursive: true });
+// Run process when this file is executed directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  // Load environment variables
+  config();
 
-    // Generate filename with timestamp
-    const timestamp = format(new Date(), "yyyy-MM-dd-HH-mm-ss");
-    const outputFile = path.join(
-      outputDir,
-      `verification-results-${timestamp}.json`
-    );
+  async function runPlaidProcess() {
+    try {
+      const CSV_FILE_NAME = "scrrep_8zaPSPdunqVjS4.csv.csv";
+      const endDate = new Date("2025-03-31");
 
-    // Write results to JSON file with pretty printing
-    await fs.writeFile(outputFile, JSON.stringify(results, null, 2), "utf-8");
-    console.log(`Successfully wrote verification results to ${outputFile}`);
-  } catch (error) {
-    console.error("Error writing verification results to JSON:", error);
-    throw error;
+      console.log("Starting Plaid CSV processing...");
+      console.log(`Processing file: ${CSV_FILE_NAME}`);
+
+      // Read original CSV
+      console.log("\n=== Reading Original CSV ===");
+      const originalRecords = await readOriginalCsv(CSV_FILE_NAME);
+      console.log(`Found ${originalRecords.length} records`);
+
+      // Read verification results
+      console.log("\n=== Reading Verification Results ===");
+      const verificationResultsPath = path.join(
+        process.cwd(),
+        "output",
+        `plaid-verification-results-${format(endDate, "yyyy-QQ")}.json`
+      );
+      const verificationResultsContent = await fs.readFile(
+        verificationResultsPath,
+        "utf-8"
+      );
+      const verificationResults = JSON.parse(verificationResultsContent);
+      console.log(`Found ${verificationResults.length} verification results`);
+
+      // Write augmented CSV
+      console.log("\n=== Writing Augmented CSV ===");
+      const outputPath = path.join(
+        process.cwd(),
+        "output",
+        `plaid-verification-results - Q1-2025.csv`
+      );
+      await writeAugmentedCsv(originalRecords, verificationResults, outputPath);
+
+      console.log("\nPlaid CSV processing completed successfully!");
+    } catch (error) {
+      console.error("Plaid CSV processing failed:", error);
+      process.exit(1);
+    }
   }
+
+  // Run Plaid process
+  runPlaidProcess();
 }

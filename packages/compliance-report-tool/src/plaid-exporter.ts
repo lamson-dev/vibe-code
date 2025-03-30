@@ -6,7 +6,6 @@ import {
 import {
   readOriginalCsv,
   writeAugmentedCsv,
-  writeVerificationResultsJson,
   readCustomerReferences,
 } from "./plaid-process-csv.js";
 import { VerificationResult } from "./types/index.js";

@@ -1,64 +1,41 @@
 import { config } from "dotenv";
 import { format } from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import fs from "fs/promises";
 import path from "path";
-import { validateEnv } from "./utils/env.js";
-import { initializePlaidClient } from "./services/plaid.js";
-import { getVerificationResults } from "./services/verification.js";
-import {
-  readOriginalCsv,
-  writeAugmentedCsv,
-  writeVerificationResultsJson,
-} from "./services/csv.js";
+import { exportPlaidVerificationResults } from "./plaid-exporter.js";
+import { exportMiddeskBusinesses } from "./middesk-exporter.js";
 
 // Load environment variables
 config();
 
-async function exportVerificationResults(): Promise<void> {
+const TIME_ZONE = "America/New_York"; // US Eastern Time
+
+async function runExporters() {
   try {
-    // Validate environment variables
-    const env = validateEnv();
-
-    // Initialize Plaid client
-    const plaidClient = initializePlaidClient(env);
-
     // Set date range for Q1 2025
-    const startDate = "2025-01-01";
-    const endDate = "2025-03-31";
+    const startDateStr = "2025-01-01";
+    const endDateStr = "2025-03-31";
 
-    console.log(
-      `Fetching verification results from ${startDate} to ${endDate}...`
-    );
+    console.log("Starting compliance data export process...");
+    console.log(`Date range: ${startDateStr} to ${endDateStr}`);
 
-    // Read original CSV
-    console.log("Reading original CSV file...");
-    const originalRecords = await readOriginalCsv();
+    // Run Plaid exporter
+    console.log("\n=== Running Plaid Verification Export ===");
+    await exportPlaidVerificationResults(startDateStr, endDateStr);
 
-    const customerRefs = originalRecords.map(
-      (record) => record.customer_reference
-    );
-    // Get verification results
-    const results = await getVerificationResults(
-      plaidClient,
-      startDate,
-      endDate,
-      customerRefs
-    );
+    // Run Middesk exporter
+    console.log("\n=== Running Middesk Business Export ===");
+    const startDate = fromZonedTime(`${startDateStr} 00:00:00`, TIME_ZONE);
+    const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
+    await exportMiddeskBusinesses(startDate, endDate);
 
-    // Write augmented CSV
-    console.log("Writing augmented CSV with verification results...");
-    await writeAugmentedCsv(originalRecords, results);
-
-    // Write results to JSON file
-    console.log("Writing results to JSON file...");
-    await writeVerificationResultsJson(results);
-
-    console.log("Export completed successfully");
+    console.log("\nAll exports completed successfully!");
   } catch (error) {
-    console.error("Failed to export verification results:", error);
+    console.error("Export process failed:", error);
     process.exit(1);
   }
 }
 
-// Run the export
-exportVerificationResults();
+// Run both exporters
+runExporters();

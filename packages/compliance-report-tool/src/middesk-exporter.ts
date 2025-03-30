@@ -177,16 +177,4 @@ async function exportMiddeskBusinesses(startDate: Date, endDate: Date) {
   }
 }
 
-// Example usage:
-// For Q1 2025 (Jan 1, 2025 to Mar 31, 2025)
-// Using US Eastern Time (ET)
-const startDate = fromZonedTime("2025-01-01 00:00:00", TIME_ZONE);
-const endDate = fromZonedTime("2025-03-31 23:59:59", TIME_ZONE);
-
-console.log("Using date range:", {
-  start: formatDate(toZonedTime(startDate, TIME_ZONE), "yyyy-MM-dd HH:mm:ss"),
-  end: formatDate(toZonedTime(endDate, TIME_ZONE), "yyyy-MM-dd HH:mm:ss"),
-  timeZone: TIME_ZONE,
-});
-
-exportMiddeskBusinesses(startDate, endDate);
+export { exportMiddeskBusinesses };

@@ -38,7 +38,7 @@ function formatYearQuarter(dateString: string): string {
   const date = parseISO(dateString);
   const year = date.getFullYear();
   const quarter = getQuarter(date);
-  return `${year}-Q${quarter}`;
+  return `Q${quarter}-${year}`;
 }
 
 function processBusinesses(businesses: MiddeskBusiness[]) {

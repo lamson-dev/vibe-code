@@ -10,11 +10,13 @@
     "dev": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/index.ts",
     "middesk:export": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/middesk-exporter.ts",
     "middesk:test": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/test-middesk.ts",
+    "middesk:process-csv": "NODE_OPTIONS='--loader ts-node/esm' ts-node src/process-middesk.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "axios": "^1.8.4",
     "csv-parse": "^5.5.3",
+    "csv-stringify": "^6.4.5",
     "date-fns": "^3.3.1",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^16.4.1",

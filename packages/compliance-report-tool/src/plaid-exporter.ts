@@ -7,6 +7,7 @@ import {
   readOriginalCsv,
   writeAugmentedCsv,
   writeVerificationResultsJson,
+  readCustomerReferences,
 } from "./plaid-process-csv.js";
 import { VerificationResult } from "./types/index.js";
 import { format } from "date-fns";
@@ -15,6 +16,12 @@ import path from "path";
 import { parse } from "csv-parse/sync";
 import { stringify } from "csv-stringify/sync";
 import { writeResultsJson } from "./utils.js";
+import { config } from "dotenv";
+import { fromZonedTime } from "date-fns-tz";
+import { fileURLToPath } from "url";
+
+const TIME_ZONE = "America/New_York"; // US Eastern Time
+const CSV_FILE_NAME = "scrrep_8zaPSPdunqVjS4.csv.csv";
 
 export async function augmentCsvWithVerificationResults(
   results: VerificationResult[],
@@ -71,4 +78,45 @@ export async function writePlaidResultsJson(
   endDate: Date
 ): Promise<void> {
   return writeResultsJson(results, endDate, "plaid-verification-results");
+}
+
+// Run export when this file is executed directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  // Load environment variables
+  config();
+
+  async function runPlaidExport() {
+    try {
+      // Set date range for Q1 2025
+      const startDateStr = "2025-01-01";
+      const endDateStr = "2025-03-31";
+
+      console.log("Starting Plaid verification export process...");
+      console.log(`Date range: ${startDateStr} to ${endDateStr}`);
+
+      // Get customer references for Plaid export
+      const customerRefs = await readCustomerReferences(CSV_FILE_NAME);
+
+      // Run Plaid exporter
+      console.log("\n=== Running Plaid Verification Export ===");
+      const plaidResults = await exportPlaidVerificationResults(
+        startDateStr,
+        endDateStr,
+        customerRefs
+      );
+
+      // Write Plaid results to JSON
+      console.log("\n=== Writing Plaid Results ===");
+      const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
+      await writePlaidResultsJson(plaidResults, endDate);
+
+      console.log("\nPlaid export completed successfully!");
+    } catch (error) {
+      console.error("Plaid export process failed:", error);
+      process.exit(1);
+    }
+  }
+
+  // Run Plaid export
+  runPlaidExport();
 }

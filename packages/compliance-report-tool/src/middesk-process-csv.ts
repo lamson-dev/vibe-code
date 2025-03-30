@@ -59,7 +59,7 @@ function processBusinesses(businesses: MiddeskBusiness[]) {
       "#": business.id,
       "Business Name": business.name,
       "Business Physical Address": physicalAddress,
-      EIN: business.tin.tin,
+      EIN: business.tin?.tin || "MISSING",
       "Onboard Date": formatYearQuarter(business.created_at),
       created_at: business.created_at,
       status: business.status,

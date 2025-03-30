@@ -1,6 +1,10 @@
 import axios from "axios";
 import { format as formatDate } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { config } from "dotenv";
+
+config();
+
 
 const MIDDESK_API_KEY = process.env.MIDDESK_API_KEY;
 const MIDDESK_ENV = process.env.MIDDESK_ENV || "sandbox";

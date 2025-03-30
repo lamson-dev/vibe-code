@@ -28,10 +28,6 @@ export async function augmentCsvWithVerificationResults(
     // Write augmented CSV
     console.log("Writing augmented CSV with verification results...");
     await writeAugmentedCsv(originalRecords, results);
-
-    // Write results to JSON file
-    console.log("Writing results to JSON file...");
-    await writeVerificationResultsJson(results);
   } catch (error) {
     console.error("Failed to augment CSV with verification results:", error);
     throw error;

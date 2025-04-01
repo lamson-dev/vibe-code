@@ -24,7 +24,17 @@ import { formatYearQuarter } from "./utils.js";
 config();
 
 const TIME_ZONE = "America/New_York"; // US Eastern Time
-const CSV_FILE_NAME = "scrrep_8zaPSPdunqVjS4.csv.csv";
+
+// Get CSV file name from command line arguments
+const csvFileNameArg = process.argv[2];
+
+if (!csvFileNameArg) {
+  console.error("Error: Please provide the path to the CSV file as a command line argument.");
+  console.error("Usage: npm run report -- <path_to_csv_file>");
+  process.exit(1);
+}
+
+const CSV_FILE_NAME = csvFileNameArg;
 
 async function runExporters() {
   try {

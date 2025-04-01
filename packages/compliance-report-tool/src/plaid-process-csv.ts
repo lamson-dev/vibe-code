@@ -8,6 +8,7 @@ import {
   MiddeskBusiness,
 } from "./types/index.js";
 import { format } from "date-fns";
+import { formatYearQuarter } from "./utils.js";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
 
@@ -15,7 +16,7 @@ export async function readCustomerReferences(
   csvFileName: string
 ): Promise<string[]> {
   try {
-    const csvPath = path.join(process.cwd(), "input", csvFileName);
+    const csvPath = path.resolve(process.cwd(), csvFileName);
     const csvContent = await fs.readFile(csvPath, "utf-8");
     const records = parse(csvContent, {
       columns: true,
@@ -40,7 +41,7 @@ export async function readOriginalCsv(
   csvFileName: string
 ): Promise<CsvRecord[]> {
   try {
-    const csvPath = path.join(process.cwd(), "input", csvFileName);
+    const csvPath = path.resolve(process.cwd(), csvFileName);
     const csvContent = await fs.readFile(csvPath, "utf-8");
     const records = parse(csvContent, {
       columns: true,
@@ -237,7 +238,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       const verificationResultsPath = path.join(
         process.cwd(),
         "output",
-        `plaid-verification-results-${format(endDate, "yyyy-QQ")}.json`
+        `plaid-verification-results-${formatYearQuarter(endDate.toISOString())}.json`
       );
       const verificationResultsContent = await fs.readFile(
         verificationResultsPath,
@@ -251,7 +252,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       const middeskResultsPath = path.join(
         process.cwd(),
         "output",
-        `middesk-results-${format(endDate, "yyyy-QQ")}.json`
+        `middesk-results-${formatYearQuarter(endDate.toISOString())}.json`
       );
       const middeskResultsContent = await fs.readFile(
         middeskResultsPath,

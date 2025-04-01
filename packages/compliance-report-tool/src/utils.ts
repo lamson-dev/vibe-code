@@ -6,7 +6,7 @@ export function formatYearQuarter(dateString: string): string {
   const date = parseISO(dateString);
   const year = date.getFullYear();
   const quarter = getQuarter(date);
-  return `Q${quarter}-${year}`;
+  return `Q${quarter} ${year}`;
 }
 
 export async function writeResultsJson<T>(
@@ -21,10 +21,12 @@ export async function writeResultsJson<T>(
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    const dateFormat = quarterFormat ? "yyyy-QQ" : "yyyy-MM";
+    const dateSuffix = quarterFormat
+      ? formatYearQuarter(endDate.toISOString())
+      : format(endDate, "yyyy-MM");
     const outputFile = path.join(
       outputDir,
-      `${prefix}-${format(endDate, dateFormat)}.json`
+      `${prefix}-${dateSuffix}.json`
     );
 
     fs.writeFileSync(outputFile, JSON.stringify(results, null, 2));

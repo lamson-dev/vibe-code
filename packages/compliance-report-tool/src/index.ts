@@ -84,7 +84,7 @@ async function runExporters() {
       "output",
       `CIP Results - ${yearQuarter}.csv`
     );
-    await writeCipCsv(plaidResults, [], cipOutputPath);
+    await writeCipCsv(plaidResults, [], cipOutputPath, endDate);
 
     // 4. Run Middesk exporter
     console.log("\n=== Running Middesk Business Export ===");
@@ -95,9 +95,9 @@ async function runExporters() {
     console.log("\n=== Writing Middesk Results ===");
     await writeMiddeskResultsJson(middeskResults, endDate);
 
-    // // 5. Update CIP CSV with business data
-    // console.log("\n=== Updating CIP CSV with Business Data ===");
-    // await writeCipCsv(plaidResults, middeskResults, cipOutputPath);
+    // 5. Update CIP CSV with business data
+    console.log("\n=== Updating CIP CSV with Business Data ===");
+    await writeCipCsv(plaidResults, middeskResults, cipOutputPath, endDate);
 
     // console.log("\nAll exports completed successfully!");
   } catch (error) {

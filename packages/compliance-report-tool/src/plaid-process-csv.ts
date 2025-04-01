@@ -8,7 +8,7 @@ import {
   MiddeskBusiness,
 } from "./types/index.js";
 import { format } from "date-fns";
-import { formatYearQuarter } from "./utils.js";
+import { formatYearQuarter, calculateLevenshteinDistance } from "./utils.js";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
 
@@ -120,12 +120,16 @@ export async function writeOfacCsv(
 export async function writeCipCsv(
   verificationResults: VerificationResult[],
   middeskResults: MiddeskBusiness[],
-  outputPath: string
+  outputPath: string,
+  endDate: Date
 ): Promise<void> {
   try {
-    // Create a map of Middesk results by customer reference
+    // Create a map of Middesk results by external_id
     const middeskMap = new Map(
-      middeskResults.map((result) => [result.external_id, result])
+      middeskResults.map((result) => [
+        result.external_id, // Use external_id as the key
+        result,
+      ])
     );
 
     // Ensure output directory exists
@@ -150,14 +154,45 @@ export async function writeCipCsv(
       "status",
     ];
 
+    const yearQuarter = formatYearQuarter(endDate.toISOString());
+
     const csvRows = verificationResults.map((result, index) => {
       const user = result.user;
       const name = user.name;
       const address = user.address;
+      const customerReference = result.client_user_id;
 
-      // TODO: need to find this mapping some how
+      let middeskResult: MiddeskBusiness | undefined = undefined;
 
-      const middeskResult = middeskMap.get(result.client_user_id);
+      // Attempt 1: Check if plaidClientId includes the externalId
+      if (customerReference) {
+        for (const [externalId, business] of middeskMap.entries()) {
+          // Ensure externalId is not null/empty before checking includes
+          if (externalId && customerReference.includes(externalId)) {
+            middeskResult = business;
+            break; // Found a match via includes()
+          }
+        }
+      }
+
+      // Attempt 2: Fallback to Levenshtein distance if no includes() match
+      if (!middeskResult && customerReference) {
+        let bestMatch: MiddeskBusiness | undefined = undefined;
+        let minDistance = Infinity;
+        const MAX_ALLOWED_DISTANCE = 2; // Allow up to 2 edits (adjust if needed)
+
+        for (const [externalId, business] of middeskMap.entries()) {
+          const distance = calculateLevenshteinDistance(customerReference ?? "", business.name ?? "");
+          if (distance < minDistance && distance <= MAX_ALLOWED_DISTANCE) {
+            minDistance = distance;
+            bestMatch = business;
+          }
+        }
+        // Only assign if a reasonably close match was found
+        if (bestMatch) {
+          middeskResult = bestMatch;
+        }
+      }
 
       // Format physical address
       const physicalAddress = [
@@ -195,7 +230,7 @@ export async function writeCipCsv(
         user.id_number?.value || "",
         "",
         "",
-        "Q1-2025",
+        yearQuarter,
         middeskResult?.created_at || "",
         middeskResult?.status || "",
       ];
@@ -224,6 +259,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     try {
       const CSV_FILE_NAME = "scrrep_8zaPSPdunqVjS4.csv.csv";
       const endDate = new Date("2025-03-31");
+      const yearQuarter = formatYearQuarter(endDate.toISOString());
 
       console.log("Starting Plaid CSV processing...");
       console.log(`Processing file: ${CSV_FILE_NAME}`);
@@ -266,7 +302,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       const ofacOutputPath = path.join(
         process.cwd(),
         "output",
-        `OFAC Results - Q1-2025.csv`
+        `OFAC Results - ${yearQuarter}.csv`
       );
       await writeOfacCsv(originalRecords, verificationResults, ofacOutputPath);
 
@@ -275,9 +311,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       const cipOutputPath = path.join(
         process.cwd(),
         "output",
-        `CIP Results - Q1-2025.csv`
+        `CIP Results - ${yearQuarter}.csv`
       );
-      await writeCipCsv(verificationResults, middeskResults, cipOutputPath);
+      await writeCipCsv(verificationResults, middeskResults, cipOutputPath, endDate);
 
       console.log("\nPlaid CSV processing completed successfully!");
     } catch (error) {

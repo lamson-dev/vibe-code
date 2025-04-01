@@ -23,7 +23,7 @@ import { formatYearQuarter } from "./utils.js";
 // Load environment variables
 config();
 
-const TIME_ZONE = "America/New_York"; // US Eastern Time
+const TIME_ZONE = "America/Los_Angeles"; // US Pacific Time
 
 // Get CSV file name from command line arguments
 const csvFileNameArg = process.argv[2];

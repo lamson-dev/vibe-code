@@ -83,12 +83,12 @@ export async function processMiddeskData(
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const inputFile = path.join(
     process.cwd(),
-    "output",
+    "_output",
     "middesk-businesses-2025-01.json"
   );
   const outputFile = path.join(
     process.cwd(),
-    "output",
+    "_output",
     "processed-middesk-data.csv"
   );
   processMiddeskData(inputFile, outputFile);

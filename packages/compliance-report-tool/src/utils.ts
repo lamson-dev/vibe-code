@@ -16,7 +16,7 @@ export async function writeResultsJson<T>(
   quarterFormat: boolean = true
 ): Promise<void> {
   try {
-    const outputDir = path.join(process.cwd(), "output");
+    const outputDir = path.join(process.cwd(), "_output");
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }

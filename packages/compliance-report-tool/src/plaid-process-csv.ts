@@ -273,7 +273,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       console.log("\n=== Reading Verification Results ===");
       const verificationResultsPath = path.join(
         process.cwd(),
-        "output",
+        "_output",
         `plaid-verification-results-${formatYearQuarter(endDate.toISOString())}.json`
       );
       const verificationResultsContent = await fs.readFile(
@@ -287,7 +287,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       console.log("\n=== Reading Middesk Results ===");
       const middeskResultsPath = path.join(
         process.cwd(),
-        "output",
+        "_output",
         `middesk-results-${formatYearQuarter(endDate.toISOString())}.json`
       );
       const middeskResultsContent = await fs.readFile(
@@ -301,7 +301,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       console.log("\n=== Writing OFAC CSV ===");
       const ofacOutputPath = path.join(
         process.cwd(),
-        "output",
+        "_output",
         `OFAC Results - ${yearQuarter}.csv`
       );
       await writeOfacCsv(originalRecords, verificationResults, ofacOutputPath);
@@ -310,7 +310,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       console.log("\n=== Writing CIP CSV ===");
       const cipOutputPath = path.join(
         process.cwd(),
-        "output",
+        "_output",
         `CIP Results - ${yearQuarter}.csv`
       );
       await writeCipCsv(verificationResults, middeskResults, cipOutputPath, endDate);

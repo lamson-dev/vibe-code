@@ -72,7 +72,7 @@ async function runExporters() {
     console.log("\n=== Writing OFAC CSV ===");
     const ofacOutputPath = path.join(
       process.cwd(),
-      "output",
+      "_output",
       `OFAC Results - ${yearQuarter}.csv`
     );
     await writeOfacCsv(originalRecords, plaidResults, ofacOutputPath);
@@ -81,7 +81,7 @@ async function runExporters() {
     console.log("\n=== Writing Initial CIP CSV ===");
     const cipOutputPath = path.join(
       process.cwd(),
-      "output",
+      "_output",
       `CIP Results - ${yearQuarter}.csv`
     );
     await writeCipCsv(plaidResults, [], cipOutputPath, endDate);

@@ -30,13 +30,25 @@ To use this tool, follow these steps:
    filename anymore. You can use the provided gen_test.csv file for testing:
    ./gen_compliance_report.sh gen_test.csv
 
-5. Data Privacy Options:
-   By default, sensitive data like TINs (EINs) and SSNs are redacted in the output.
-   If you need to see this sensitive information, add the --show-sensitive flag:
+5. Available Options:
+
+   a) Data Privacy Options:
+      By default, sensitive data like TINs (EINs) and SSNs are redacted in the output.
+      If you need to see this sensitive information, add the --show-sensitive flag:
    
-   ./gen_compliance_report.sh gen_test.csv --show-sensitive
+      ./gen_compliance_report.sh gen_test.csv --show-sensitive
    
-   WARNING: Using this flag will display full, unredacted sensitive data in the output files.
+      WARNING: Using this flag will display full, unredacted sensitive data in the output files.
+
+   b) JSON Output Control:
+      By default, only CSV files are generated. If you need the intermediate JSON files
+      (which contain more detailed data), add the --write-json flag:
+      
+      ./gen_compliance_report.sh gen_test.csv --write-json
+      
+      You can combine both flags if needed:
+      
+      ./gen_compliance_report.sh gen_test.csv --show-sensitive --write-json
 
 That's it! No need to install dependencies or run build steps.
 

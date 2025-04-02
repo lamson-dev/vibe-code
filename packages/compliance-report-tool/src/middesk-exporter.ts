@@ -8,9 +8,10 @@ const TIME_ZONE = "America/New_York"; // US Eastern Time
 
 export async function writeMiddeskResultsJson(
   businesses: any[],
-  endDate: Date
+  endDate: Date,
+  showSensitiveData: boolean = false
 ): Promise<void> {
-  return writeResultsJson(businesses, endDate, "middesk-businesses");
+  return writeResultsJson(businesses, endDate, "middesk-businesses", true, showSensitiveData);
 }
 
 export async function exportMiddeskBusinesses(

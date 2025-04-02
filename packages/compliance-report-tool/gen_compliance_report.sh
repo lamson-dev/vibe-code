@@ -25,14 +25,16 @@ echo "Using hardcoded environment variables."
 # Initialize variables
 CSV_FILE_PATH=""
 SHOW_SENSITIVE=false
+WRITE_JSON=false
 
 # Display usage
 function print_usage {
-  echo "Usage: $0 <path_to_csv_file> [--show-sensitive]"
-  echo "Example: $0 gen_test.csv"
+  echo "Usage: $0 <path_to_csv_file> [options]"
+  echo "Example: $0 gen_test.csv --write-json"
   echo ""
   echo "Options:"
   echo "  --show-sensitive    Shows sensitive data (TIN/SSN) in the output"
+  echo "  --write-json        Writes JSON files (otherwise only CSV files are created)"
 }
 
 # Handle arguments
@@ -46,6 +48,8 @@ fi
 for arg in "$@"; do
   if [ "$arg" == "--show-sensitive" ]; then
     SHOW_SENSITIVE=true
+  elif [ "$arg" == "--write-json" ]; then
+    WRITE_JSON=true
   elif [ "${arg:0:2}" != "--" ]; then
     CSV_FILE_PATH="$arg"
   fi
@@ -88,6 +92,12 @@ else
   echo "Note: Sensitive data (TIN, SSN) will be redacted (use --show-sensitive to show)"
 fi
 
+if [ "$WRITE_JSON" = true ]; then
+  echo "Note: JSON files will be written to the _output directory"
+else
+  echo "Note: JSON files will not be written (use --write-json to write JSON files)"
+fi
+
 # Create a temporary script to require and call the module function
 TMP_SCRIPT=$(mktemp)
 cat > "$TMP_SCRIPT" << EOL
@@ -95,6 +105,7 @@ cat > "$TMP_SCRIPT" << EOL
 const runExporters = require('${NODE_SCRIPT}').default;
 const csvPath = '${FULL_CSV_PATH}';
 const showSensitive = ${SHOW_SENSITIVE};
+const writeJson = ${WRITE_JSON};
 
 // Ensure output directory exists
 const fs = require('fs');
@@ -105,7 +116,7 @@ if (!fs.existsSync(outputDir)) {
 }
 
 console.log('Running compliance report with file:', csvPath);
-runExporters(csvPath, showSensitive).catch(err => {
+runExporters(csvPath, showSensitive, writeJson).catch(err => {
   console.error('Error running compliance report:', err);
   process.exit(1);
 });

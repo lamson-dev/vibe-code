@@ -35,9 +35,10 @@ export async function mainCLI() {
   
   if (args.length === 0) {
     console.error("Error: Please provide the path to the CSV file as a command line argument.");
-    console.error("Usage: node bundle.cjs <path_to_csv_file> [--show-sensitive]");
+    console.error("Usage: node bundle.cjs <path_to_csv_file> [options]");
     console.error("Options:");
     console.error("  --show-sensitive    Shows sensitive data (TIN/SSN) in the output");
+    console.error("  --write-json        Writes JSON files (otherwise only CSV files are created)");
     process.exit(1);
   }
   
@@ -46,12 +47,14 @@ export async function mainCLI() {
   
   if (!csvFileNameArg) {
     console.error("Error: Please provide the path to the CSV file as a command line argument.");
-    console.error("Usage: node bundle.cjs <path_to_csv_file> [--show-sensitive]");
+    console.error("Usage: node bundle.cjs <path_to_csv_file> [options]");
     process.exit(1);
   }
   
   // Check if the show sensitive flag is present
   const showSensitiveData = args.includes('--show-sensitive');
+  // Check if the write json flag is present
+  const writeJson = args.includes('--write-json');
 
   // Create output directory if it doesn't exist
   const outputDir = path.join(process.cwd(), "_output");
@@ -62,14 +65,14 @@ export async function mainCLI() {
   }
 
   // Run the exporters with the provided CSV file
-  await runExporters(csvFileNameArg, showSensitiveData);
+  await runExporters(csvFileNameArg, showSensitiveData, writeJson);
 }
 
 /**
  * Core function to run the exporters - exported so it can be called
  * explicitly from gen_compliance_report.sh
  */
-export async function runExporters(csvFilePath: string, showSensitiveData: boolean = false) {
+export async function runExporters(csvFilePath: string, showSensitiveData: boolean = false, writeJson: boolean = false) {
   try {
     // Set date range for Q1 2025
     const startDateStr = "2025-01-01";
@@ -79,6 +82,7 @@ export async function runExporters(csvFilePath: string, showSensitiveData: boole
     console.log(`Date range: ${startDateStr} to ${endDateStr}`);
     console.log(`Using CSV file: ${csvFilePath}`);
     console.log(`Sensitive data will be ${showSensitiveData ? 'visible' : 'redacted'}`);
+    console.log(`JSON files will ${writeJson ? 'be written' : 'not be written'}`);
 
     // Read original CSV records
     console.log("\n=== Reading Original CSV ===");
@@ -99,9 +103,13 @@ export async function runExporters(csvFilePath: string, showSensitiveData: boole
     const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
     const yearQuarter = formatYearQuarter(endDateStr);
 
-    // Write Plaid results to JSON
-    console.log("\n=== Writing Plaid Results ===");
-    await writePlaidResultsJson(plaidResults, endDate);
+    // Write Plaid results to JSON if requested
+    if (writeJson) {
+      console.log("\n=== Writing Plaid Results to JSON ===");
+      await writePlaidResultsJson(plaidResults, endDate, showSensitiveData);
+    } else {
+      console.log("\n=== Skipping Plaid JSON Output (use --write-json to enable) ===");
+    }
 
     // 2. Write OFAC CSV (augmented from original records)
     console.log("\n=== Writing OFAC CSV ===");
@@ -126,9 +134,13 @@ export async function runExporters(csvFilePath: string, showSensitiveData: boole
     const startDate = fromZonedTime(`${startDateStr} 00:00:00`, TIME_ZONE);
     const middeskResults = await exportMiddeskBusinesses(startDate, endDate);
 
-    // Write Middesk results to JSON
-    console.log("\n=== Writing Middesk Results ===");
-    await writeMiddeskResultsJson(middeskResults, endDate);
+    // Write Middesk results to JSON if requested
+    if (writeJson) {
+      console.log("\n=== Writing Middesk Results to JSON ===");
+      await writeMiddeskResultsJson(middeskResults, endDate, showSensitiveData);
+    } else {
+      console.log("\n=== Skipping Middesk JSON Output (use --write-json to enable) ===");
+    }
 
     // 5. Update CIP CSV with business data
     console.log("\n=== Updating CIP CSV with Business Data ===");

@@ -46,9 +46,10 @@ export async function exportPlaidVerificationResults(
 
 export async function writePlaidResultsJson(
   results: any[],
-  endDate: Date
+  endDate: Date,
+  showSensitiveData: boolean = false
 ): Promise<void> {
-  return writeResultsJson(results, endDate, "plaid-verification-results");
+  return writeResultsJson(results, endDate, "plaid-verification-results", true, showSensitiveData);
 }
 
 /**

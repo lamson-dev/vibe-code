@@ -7,9 +7,7 @@ import {
   AugmentedCsvRecord,
   MiddeskBusiness,
 } from "./types/index.js";
-import { format } from "date-fns";
 import { formatYearQuarter, calculateLevenshteinDistance } from "./utils.js";
-import { fileURLToPath } from "url";
 import { config } from "dotenv";
 
 export async function readCustomerReferences(
@@ -250,78 +248,91 @@ export async function writeCipCsv(
   }
 }
 
-// Run process when this file is executed directly
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  // Load environment variables
-  config();
-
-  async function runPlaidProcess() {
-    try {
-      const CSV_FILE_NAME = "scrrep_8zaPSPdunqVjS4.csv.csv";
-      const endDate = new Date("2025-03-31");
-      const yearQuarter = formatYearQuarter(endDate.toISOString());
-
-      console.log("Starting Plaid CSV processing...");
-      console.log(`Processing file: ${CSV_FILE_NAME}`);
-
-      // Read original CSV
-      console.log("\n=== Reading Original CSV ===");
-      const originalRecords = await readOriginalCsv(CSV_FILE_NAME);
-      console.log(`Found ${originalRecords.length} records`);
-
-      // Read verification results
-      console.log("\n=== Reading Verification Results ===");
-      const verificationResultsPath = path.join(
-        process.cwd(),
-        "_output",
-        `plaid-verification-results-${formatYearQuarter(endDate.toISOString())}.json`
-      );
-      const verificationResultsContent = await fs.readFile(
-        verificationResultsPath,
-        "utf-8"
-      );
-      const verificationResults = JSON.parse(verificationResultsContent);
-      console.log(`Found ${verificationResults.length} verification results`);
-
-      // Read Middesk results
-      console.log("\n=== Reading Middesk Results ===");
-      const middeskResultsPath = path.join(
-        process.cwd(),
-        "_output",
-        `middesk-results-${formatYearQuarter(endDate.toISOString())}.json`
-      );
-      const middeskResultsContent = await fs.readFile(
-        middeskResultsPath,
-        "utf-8"
-      );
-      const middeskResults = JSON.parse(middeskResultsContent);
-      console.log(`Found ${middeskResults.length} Middesk results`);
-
-      // Write OFAC CSV (from original records)
-      console.log("\n=== Writing OFAC CSV ===");
-      const ofacOutputPath = path.join(
-        process.cwd(),
-        "_output",
-        `OFAC Results - ${yearQuarter}.csv`
-      );
-      await writeOfacCsv(originalRecords, verificationResults, ofacOutputPath);
-
-      // Write CIP CSV (from verification results and Middesk data)
-      console.log("\n=== Writing CIP CSV ===");
-      const cipOutputPath = path.join(
-        process.cwd(),
-        "_output",
-        `CIP Results - ${yearQuarter}.csv`
-      );
-      await writeCipCsv(verificationResults, middeskResults, cipOutputPath, endDate);
-
-      console.log("\nPlaid CSV processing completed successfully!");
-    } catch (error) {
-      console.error("Plaid CSV processing failed:", error);
+/**
+ * This function is exported to be called explicitly and only runs
+ * when this module is executed directly (not when bundled)
+ */
+export async function runPlaidProcessCLI() {
+  try {
+    // Get CSV file name from command line arguments
+    const csvFileNameArg = process.argv[2];
+    
+    if (!csvFileNameArg) {
+      console.error("Error: Please provide the path to the CSV file as a command line argument.");
+      console.error("Usage: tsx src/plaid-process-csv.ts <path_to_csv_file>");
       process.exit(1);
     }
-  }
+    
+    const endDate = new Date("2025-03-31");
+    const yearQuarter = formatYearQuarter(endDate.toISOString());
 
+    console.log("Starting Plaid CSV processing...");
+    console.log(`Processing file: ${csvFileNameArg}`);
+
+    // Read original CSV
+    console.log("\n=== Reading Original CSV ===");
+    const originalRecords = await readOriginalCsv(csvFileNameArg);
+    console.log(`Found ${originalRecords.length} records`);
+
+    // Read verification results
+    console.log("\n=== Reading Verification Results ===");
+    const verificationResultsPath = path.join(
+      process.cwd(),
+      "_output",
+      `plaid-verification-results-${formatYearQuarter(endDate.toISOString())}.json`
+    );
+    const verificationResultsContent = await fs.readFile(
+      verificationResultsPath,
+      "utf-8"
+    );
+    const verificationResults = JSON.parse(verificationResultsContent);
+    console.log(`Found ${verificationResults.length} verification results`);
+
+    // Read Middesk results
+    console.log("\n=== Reading Middesk Results ===");
+    const middeskResultsPath = path.join(
+      process.cwd(),
+      "_output",
+      `middesk-businesses-${formatYearQuarter(endDate.toISOString())}.json`
+    );
+    const middeskResultsContent = await fs.readFile(
+      middeskResultsPath,
+      "utf-8"
+    );
+    const middeskResults = JSON.parse(middeskResultsContent);
+    console.log(`Found ${middeskResults.length} Middesk results`);
+
+    // Write OFAC CSV (from original records)
+    console.log("\n=== Writing OFAC CSV ===");
+    const ofacOutputPath = path.join(
+      process.cwd(),
+      "_output",
+      `OFAC Results - ${yearQuarter}.csv`
+    );
+    await writeOfacCsv(originalRecords, verificationResults, ofacOutputPath);
+
+    // Write CIP CSV (from verification results and Middesk data)
+    console.log("\n=== Writing CIP CSV ===");
+    const cipOutputPath = path.join(
+      process.cwd(),
+      "_output",
+      `CIP Results - ${yearQuarter}.csv`
+    );
+    await writeCipCsv(verificationResults, middeskResults, cipOutputPath, endDate);
+
+    console.log("\nPlaid CSV processing completed successfully!");
+  } catch (error) {
+    console.error("Plaid CSV processing failed:", error);
+    process.exit(1);
+  }
+}
+
+// Check if this file is being run directly (not as part of a bundle)
+// This condition will only be true when the file is executed directly with tsx
+if (process.argv[1] && process.argv[1].endsWith('plaid-process-csv.ts')) {
+  // Load environment variables
+  config();
+  
   // Run Plaid process
-  runPlaidProcess();
+  runPlaidProcessCLI();
 }

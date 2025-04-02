@@ -20,23 +20,42 @@ import {
 import { processMiddeskData } from "./middesk-process-csv.js";
 import { formatYearQuarter } from "./utils.js";
 
-// Load environment variables
-config();
-
+// Define the time zone constant
 const TIME_ZONE = "America/Los_Angeles"; // US Pacific Time
 
-// Get CSV file name from command line arguments
-const csvFileNameArg = process.argv[2];
+/**
+ * Main CLI function to run when the script is called directly as a standalone executable
+ */
+export async function mainCLI() {
+  // Load environment variables
+  config();
+  
+  // Get CSV file name from command line arguments
+  const csvFileNameArg = process.argv[2];
 
-if (!csvFileNameArg) {
-  console.error("Error: Please provide the path to the CSV file as a command line argument.");
-  console.error("Usage: npm run report -- <path_to_csv_file>");
-  process.exit(1);
+  if (!csvFileNameArg) {
+    console.error("Error: Please provide the path to the CSV file as a command line argument.");
+    console.error("Usage: node bundle.cjs <path_to_csv_file>");
+    process.exit(1);
+  }
+
+  // Create output directory if it doesn't exist
+  const outputDir = path.join(process.cwd(), "_output");
+  try {
+    await fs.mkdir(outputDir, { recursive: true });
+  } catch (err) {
+    // Ignore if directory already exists
+  }
+
+  // Run the exporters with the provided CSV file
+  await runExporters(csvFileNameArg);
 }
 
-const CSV_FILE_NAME = csvFileNameArg;
-
-async function runExporters() {
+/**
+ * Core function to run the exporters - exported so it can be called
+ * explicitly from gen_compliance_report.sh
+ */
+export async function runExporters(csvFilePath: string) {
   try {
     // Set date range for Q1 2025
     const startDateStr = "2025-01-01";
@@ -44,14 +63,15 @@ async function runExporters() {
 
     console.log("Starting compliance data export process...");
     console.log(`Date range: ${startDateStr} to ${endDateStr}`);
+    console.log(`Using CSV file: ${csvFilePath}`);
 
     // Read original CSV records
     console.log("\n=== Reading Original CSV ===");
-    const originalRecords = await readOriginalCsv(CSV_FILE_NAME);
+    const originalRecords = await readOriginalCsv(csvFilePath);
     console.log(`Found ${originalRecords.length} records`);
 
     // Get customer references for Plaid export
-    const customerRefs = await readCustomerReferences(CSV_FILE_NAME);
+    const customerRefs = await readCustomerReferences(csvFilePath);
 
     // 1. Run Plaid exporter
     console.log("\n=== Running Plaid Verification Export ===");
@@ -99,12 +119,18 @@ async function runExporters() {
     console.log("\n=== Updating CIP CSV with Business Data ===");
     await writeCipCsv(plaidResults, middeskResults, cipOutputPath, endDate);
 
-    // console.log("\nAll exports completed successfully!");
+    console.log("\nAll exports completed successfully!");
   } catch (error) {
     console.error("Export process failed:", error);
     process.exit(1);
   }
 }
 
-// Run both exporters
-runExporters();
+// In the bundled version, this is the entry point
+// Only run mainCLI when the script is run directly
+if (process.argv[1] && process.argv[1].endsWith('index.ts')) {
+  mainCLI();
+}
+
+// When bundled (bundle.cjs), the main entry point will be the first export
+export default runExporters;

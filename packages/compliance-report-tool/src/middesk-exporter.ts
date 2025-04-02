@@ -1,7 +1,6 @@
 import { config } from "dotenv";
 import { format, parseISO } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
-import { fileURLToPath } from "url";
 import { getBusinesses, getBusinessDetails } from "./services/middesk.js";
 import { writeResultsJson } from "./utils.js";
 
@@ -70,37 +69,53 @@ export async function exportMiddeskBusinesses(
   }
 }
 
-// Run export when this file is executed directly
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  // Load environment variables
-  config();
-
-  async function runMiddeskExport() {
-    try {
-      // Set date range for Q1 2025
-      const startDateStr = "2025-01-01";
-      const endDateStr = "2025-03-31";
-
-      console.log("Starting Middesk business export process...");
-      console.log(`Date range: ${startDateStr} to ${endDateStr}`);
-
-      // Run Middesk exporter
-      console.log("\n=== Running Middesk Business Export ===");
-      const startDate = fromZonedTime(`${startDateStr} 00:00:00`, TIME_ZONE);
-      const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
-      const middeskResults = await exportMiddeskBusinesses(startDate, endDate);
-
-      // Write Middesk results to JSON
-      console.log("\n=== Writing Middesk Results ===");
-      await writeMiddeskResultsJson(middeskResults, endDate);
-
-      console.log("\nMiddesk export completed successfully!");
-    } catch (error) {
-      console.error("Middesk export process failed:", error);
+/**
+ * This function is exported to be called explicitly and only runs
+ * when this module is executed directly (not when bundled)
+ */
+export async function runMiddeskExportCLI() {
+  try {
+    // Get CSV file name from command line arguments
+    const csvFileNameArg = process.argv[2];
+    
+    if (!csvFileNameArg) {
+      console.error("Error: Please provide the path to the CSV file as a command line argument.");
+      console.error("Usage: tsx src/middesk-exporter.ts <path_to_csv_file>");
       process.exit(1);
     }
-  }
+    
+    // Set date range for Q1 2025
+    const startDateStr = "2025-01-01";
+    const endDateStr = "2025-03-31";
 
-  // Run Middesk export
-  runMiddeskExport();
+    console.log("Starting Middesk business export process...");
+    console.log(`Date range: ${startDateStr} to ${endDateStr}`);
+    console.log(`Using CSV file: ${csvFileNameArg}`);
+
+    // Run Middesk exporter
+    console.log("\n=== Running Middesk Business Export ===");
+    const startDate = fromZonedTime(`${startDateStr} 00:00:00`, TIME_ZONE);
+    const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
+    const middeskResults = await exportMiddeskBusinesses(startDate, endDate);
+
+    // Write Middesk results to JSON
+    console.log("\n=== Writing Middesk Results ===");
+    await writeMiddeskResultsJson(middeskResults, endDate);
+
+    console.log("\nMiddesk export completed successfully!");
+  } catch (error) {
+    console.error("Middesk export process failed:", error);
+    process.exit(1);
+  }
+}
+
+// Check if this file is being run directly (not as part of a bundle)
+// This condition will only be true when the file is executed directly with tsx
+// In the bundle context, this module's filename won't match process.argv[1]
+if (process.argv[1] && process.argv[1].endsWith('middesk-exporter.ts')) {
+  // Load environment variables
+  config();
+  
+  // Run Middesk export CLI
+  runMiddeskExportCLI();
 }

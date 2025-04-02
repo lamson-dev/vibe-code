@@ -5,18 +5,12 @@ import {
 } from "./services/plaid.js";
 import { readCustomerReferences } from "./plaid-process-csv.js";
 import { VerificationResult } from "./types/index.js";
-import { format } from "date-fns";
-import fs from "fs";
-import path from "path";
-import { parse } from "csv-parse/sync";
-import { stringify } from "csv-stringify/sync";
 import { writeResultsJson } from "./utils.js";
 import { config } from "dotenv";
 import { fromZonedTime } from "date-fns-tz";
-import { fileURLToPath } from "url";
+
 
 const TIME_ZONE = "America/New_York"; // US Eastern Time
-const CSV_FILE_NAME = "scrrep_8zaPSPdunqVjS4.csv.csv";
 
 export async function exportPlaidVerificationResults(
   startDate: string,
@@ -57,43 +51,58 @@ export async function writePlaidResultsJson(
   return writeResultsJson(results, endDate, "plaid-verification-results");
 }
 
-// Run export when this file is executed directly
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  // Load environment variables
-  config();
-
-  async function runPlaidExport() {
-    try {
-      // Set date range for Q1 2025
-      const startDateStr = "2025-01-01";
-      const endDateStr = "2025-03-31";
-
-      console.log("Starting Plaid verification export process...");
-      console.log(`Date range: ${startDateStr} to ${endDateStr}`);
-
-      // Get customer references for Plaid export
-      const customerRefs = await readCustomerReferences(CSV_FILE_NAME);
-
-      // Run Plaid exporter
-      console.log("\n=== Running Plaid Verification Export ===");
-      const plaidResults = await exportPlaidVerificationResults(
-        startDateStr,
-        endDateStr,
-        customerRefs
-      );
-
-      // Write Plaid results to JSON
-      console.log("\n=== Writing Plaid Results ===");
-      const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
-      await writePlaidResultsJson(plaidResults, endDate);
-
-      console.log("\nPlaid export completed successfully!");
-    } catch (error) {
-      console.error("Plaid export process failed:", error);
+/**
+ * This function is exported to be called explicitly and only runs
+ * when this module is executed directly (not when bundled)
+ */
+export async function runPlaidExportCLI() {
+  try {
+    // Get CSV file name from command line arguments or use default
+    const csvFileNameArg = process.argv[2];
+    
+    if (!csvFileNameArg) {
+      console.error("Error: Please provide the path to the CSV file as a command line argument.");
+      console.error("Usage: tsx src/plaid-exporter.ts <path_to_csv_file>");
       process.exit(1);
     }
-  }
+    
+    // Set date range for Q1 2025
+    const startDateStr = "2025-01-01";
+    const endDateStr = "2025-03-31";
 
+    console.log("Starting Plaid verification export process...");
+    console.log(`Date range: ${startDateStr} to ${endDateStr}`);
+    console.log(`Using CSV file: ${csvFileNameArg}`);
+
+    // Get customer references for Plaid export
+    const customerRefs = await readCustomerReferences(csvFileNameArg);
+
+    // Run Plaid exporter
+    console.log("\n=== Running Plaid Verification Export ===");
+    const plaidResults = await exportPlaidVerificationResults(
+      startDateStr,
+      endDateStr,
+      customerRefs
+    );
+
+    // Write Plaid results to JSON
+    console.log("\n=== Writing Plaid Results ===");
+    const endDate = fromZonedTime(`${endDateStr} 23:59:59`, TIME_ZONE);
+    await writePlaidResultsJson(plaidResults, endDate);
+
+    console.log("\nPlaid export completed successfully!");
+  } catch (error) {
+    console.error("Plaid export process failed:", error);
+    process.exit(1);
+  }
+}
+
+// Check if this file is being run directly (not as part of a bundle)
+// This condition will only be true when the file is executed directly with tsx
+if (process.argv[1] && process.argv[1].endsWith('plaid-exporter.ts')) {
+  // Load environment variables
+  config();
+  
   // Run Plaid export
-  runPlaidExport();
+  runPlaidExportCLI();
 }

@@ -30,6 +30,14 @@ To use this tool, follow these steps:
    filename anymore. You can use the provided gen_test.csv file for testing:
    ./gen_compliance_report.sh gen_test.csv
 
+5. Data Privacy Options:
+   By default, sensitive data like TINs (EINs) and SSNs are redacted in the output.
+   If you need to see this sensitive information, add the --show-sensitive flag:
+   
+   ./gen_compliance_report.sh gen_test.csv --show-sensitive
+   
+   WARNING: Using this flag will display full, unredacted sensitive data in the output files.
+
 That's it! No need to install dependencies or run build steps.
 
 Troubleshooting:

@@ -10,6 +10,31 @@ import {
 import { formatYearQuarter, calculateLevenshteinDistance } from "./utils.js";
 import { config } from "dotenv";
 
+/**
+ * Redacts sensitive information
+ * @param value The value to potentially redact
+ * @param showSensitiveData Whether to show sensitive data
+ * @returns The original value or a redacted version
+ */
+function redactSensitiveInfo(value: string, showSensitiveData: boolean): string {
+  if (!value || showSensitiveData) {
+    return value;
+  }
+
+  // For SSN or EIN (9 digits typically)
+  if (/^\d{9}$/.test(value.replace(/[^0-9]/g, ''))) {
+    return 'XXX-XX-' + value.replace(/[^0-9]/g, '').slice(-4);
+  }
+
+  // For partial redaction of other values
+  if (value.length > 4) {
+    return 'XXXX' + value.slice(-4);
+  }
+
+  // For short values, just redact completely
+  return 'REDACTED';
+}
+
 export async function readCustomerReferences(
   csvFileName: string
 ): Promise<string[]> {
@@ -119,7 +144,8 @@ export async function writeCipCsv(
   verificationResults: VerificationResult[],
   middeskResults: MiddeskBusiness[],
   outputPath: string,
-  endDate: Date
+  endDate: Date,
+  showSensitiveData: boolean = false
 ): Promise<void> {
   try {
     // Create a map of Middesk results by external_id
@@ -216,16 +242,23 @@ export async function writeCipCsv(
       const bizPhysicalAddress =
         addressTask?.sources?.[0]?.metadata?.full_address || "N/A";
 
+      // Redact sensitive data if needed
+      const tinValue = middeskResult?.tin?.tin || "";
+      const ssnValue = user.id_number?.value || "";
+      
+      const redactedTin = redactSensitiveInfo(tinValue, showSensitiveData);
+      const redactedSsn = redactSensitiveInfo(ssnValue, showSensitiveData);
+
       return [
         (index + 1).toString(),
         middeskResult?.name || "",
         bizPhysicalAddress || "",
-        middeskResult?.tin?.tin || "",
+        redactedTin,
         name?.given_name || "",
         name?.family_name || "",
         physicalAddress,
         user.date_of_birth || "",
-        user.id_number?.value || "",
+        redactedSsn,
         "",
         "",
         yearQuarter,
@@ -242,6 +275,12 @@ export async function writeCipCsv(
 
     await fs.writeFile(outputPath, csvContent);
     console.log(`Successfully wrote CIP CSV to ${outputPath}`);
+    
+    if (!showSensitiveData) {
+      console.log("Note: Sensitive data (TIN, SSN) has been redacted. Use --show-sensitive flag to see full data.");
+    } else {
+      console.log("Warning: Full sensitive data (TIN, SSN) is visible in the output file.");
+    }
   } catch (error) {
     console.error("Error writing CIP CSV:", error);
     throw error;
@@ -259,15 +298,19 @@ export async function runPlaidProcessCLI() {
     
     if (!csvFileNameArg) {
       console.error("Error: Please provide the path to the CSV file as a command line argument.");
-      console.error("Usage: tsx src/plaid-process-csv.ts <path_to_csv_file>");
+      console.error("Usage: tsx src/plaid-process-csv.ts <path_to_csv_file> [--show-sensitive]");
       process.exit(1);
     }
+    
+    // Check if --show-sensitive flag is present
+    const showSensitiveData = process.argv.includes('--show-sensitive');
     
     const endDate = new Date("2025-03-31");
     const yearQuarter = formatYearQuarter(endDate.toISOString());
 
     console.log("Starting Plaid CSV processing...");
     console.log(`Processing file: ${csvFileNameArg}`);
+    console.log(`Sensitive data will be ${showSensitiveData ? 'visible' : 'redacted'}`);
 
     // Read original CSV
     console.log("\n=== Reading Original CSV ===");
@@ -318,7 +361,7 @@ export async function runPlaidProcessCLI() {
       "_output",
       `CIP Results - ${yearQuarter}.csv`
     );
-    await writeCipCsv(verificationResults, middeskResults, cipOutputPath, endDate);
+    await writeCipCsv(verificationResults, middeskResults, cipOutputPath, endDate, showSensitiveData);
 
     console.log("\nPlaid CSV processing completed successfully!");
   } catch (error) {

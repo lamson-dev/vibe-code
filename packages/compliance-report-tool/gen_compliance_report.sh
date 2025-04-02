@@ -22,19 +22,49 @@ export MIDDESK_ENV="sandbox"
 echo "Using hardcoded environment variables."
 
 # --- Argument Handling ---
-if [ -z "$1" ]; then
-  echo "Usage: $0 <path_to_csv_file>"
+# Initialize variables
+CSV_FILE_PATH=""
+SHOW_SENSITIVE=false
+
+# Display usage
+function print_usage {
+  echo "Usage: $0 <path_to_csv_file> [--show-sensitive]"
   echo "Example: $0 gen_test.csv"
+  echo ""
+  echo "Options:"
+  echo "  --show-sensitive    Shows sensitive data (TIN/SSN) in the output"
+}
+
+# Handle arguments
+if [ $# -eq 0 ]; then
+  echo "Error: No CSV file specified"
+  print_usage
+  exit 1
+fi
+
+# Parse arguments
+for arg in "$@"; do
+  if [ "$arg" == "--show-sensitive" ]; then
+    SHOW_SENSITIVE=true
+  elif [ "${arg:0:2}" != "--" ]; then
+    CSV_FILE_PATH="$arg"
+  fi
+done
+
+# Ensure CSV file path is provided
+if [ -z "$CSV_FILE_PATH" ]; then
+  echo "Error: No CSV file specified"
+  print_usage
   exit 1
 fi
 
 # Handle relative or absolute path for the CSV file
-if [[ "$1" == /* ]]; then
+if [[ "$CSV_FILE_PATH" == /* ]]; then
   # Absolute path provided
-  CSV_FILE_PATH="$1"
+  FULL_CSV_PATH="$CSV_FILE_PATH"
 else
   # Relative path provided, make it absolute
-  CSV_FILE_PATH="$SCRIPT_DIR/$1"
+  FULL_CSV_PATH="$SCRIPT_DIR/$CSV_FILE_PATH"
 fi
 
 # Ensure the Node script exists
@@ -45,20 +75,26 @@ if [ ! -f "$NODE_SCRIPT" ]; then
 fi
 
 # Ensure the CSV file exists
-if [ ! -f "$CSV_FILE_PATH" ]; then
-  echo "Error: CSV file not found at '$CSV_FILE_PATH'"
+if [ ! -f "$FULL_CSV_PATH" ]; then
+  echo "Error: CSV file not found at '$FULL_CSV_PATH'"
   exit 1
 fi
 
 # --- Execute Node Script ---
-echo "Running node $NODE_SCRIPT with CSV file: $CSV_FILE_PATH"
+echo "Running node $NODE_SCRIPT with CSV file: $FULL_CSV_PATH"
+if [ "$SHOW_SENSITIVE" = true ]; then
+  echo "Note: Sensitive data (TIN, SSN) will be visible in the output"
+else
+  echo "Note: Sensitive data (TIN, SSN) will be redacted (use --show-sensitive to show)"
+fi
 
 # Create a temporary script to require and call the module function
 TMP_SCRIPT=$(mktemp)
 cat > "$TMP_SCRIPT" << EOL
 // Temporary script to call the module function
 const runExporters = require('${NODE_SCRIPT}').default;
-const csvPath = '${CSV_FILE_PATH}';
+const csvPath = '${FULL_CSV_PATH}';
+const showSensitive = ${SHOW_SENSITIVE};
 
 // Ensure output directory exists
 const fs = require('fs');
@@ -69,7 +105,7 @@ if (!fs.existsSync(outputDir)) {
 }
 
 console.log('Running compliance report with file:', csvPath);
-runExporters(csvPath).catch(err => {
+runExporters(csvPath, showSensitive).catch(err => {
   console.error('Error running compliance report:', err);
   process.exit(1);
 });

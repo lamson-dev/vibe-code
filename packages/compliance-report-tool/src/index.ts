@@ -31,13 +31,27 @@ export async function mainCLI() {
   config();
   
   // Get CSV file name from command line arguments
-  const csvFileNameArg = process.argv[2];
-
-  if (!csvFileNameArg) {
+  const args = process.argv.slice(2);
+  
+  if (args.length === 0) {
     console.error("Error: Please provide the path to the CSV file as a command line argument.");
-    console.error("Usage: node bundle.cjs <path_to_csv_file>");
+    console.error("Usage: node bundle.cjs <path_to_csv_file> [--show-sensitive]");
+    console.error("Options:");
+    console.error("  --show-sensitive    Shows sensitive data (TIN/SSN) in the output");
     process.exit(1);
   }
+  
+  // Filter out any flags to get the CSV file
+  const csvFileNameArg = args.find(arg => !arg.startsWith('--'));
+  
+  if (!csvFileNameArg) {
+    console.error("Error: Please provide the path to the CSV file as a command line argument.");
+    console.error("Usage: node bundle.cjs <path_to_csv_file> [--show-sensitive]");
+    process.exit(1);
+  }
+  
+  // Check if the show sensitive flag is present
+  const showSensitiveData = args.includes('--show-sensitive');
 
   // Create output directory if it doesn't exist
   const outputDir = path.join(process.cwd(), "_output");
@@ -48,14 +62,14 @@ export async function mainCLI() {
   }
 
   // Run the exporters with the provided CSV file
-  await runExporters(csvFileNameArg);
+  await runExporters(csvFileNameArg, showSensitiveData);
 }
 
 /**
  * Core function to run the exporters - exported so it can be called
  * explicitly from gen_compliance_report.sh
  */
-export async function runExporters(csvFilePath: string) {
+export async function runExporters(csvFilePath: string, showSensitiveData: boolean = false) {
   try {
     // Set date range for Q1 2025
     const startDateStr = "2025-01-01";
@@ -64,6 +78,7 @@ export async function runExporters(csvFilePath: string) {
     console.log("Starting compliance data export process...");
     console.log(`Date range: ${startDateStr} to ${endDateStr}`);
     console.log(`Using CSV file: ${csvFilePath}`);
+    console.log(`Sensitive data will be ${showSensitiveData ? 'visible' : 'redacted'}`);
 
     // Read original CSV records
     console.log("\n=== Reading Original CSV ===");
@@ -104,7 +119,7 @@ export async function runExporters(csvFilePath: string) {
       "_output",
       `CIP Results - ${yearQuarter}.csv`
     );
-    await writeCipCsv(plaidResults, [], cipOutputPath, endDate);
+    await writeCipCsv(plaidResults, [], cipOutputPath, endDate, showSensitiveData);
 
     // 4. Run Middesk exporter
     console.log("\n=== Running Middesk Business Export ===");
@@ -117,7 +132,7 @@ export async function runExporters(csvFilePath: string) {
 
     // 5. Update CIP CSV with business data
     console.log("\n=== Updating CIP CSV with Business Data ===");
-    await writeCipCsv(plaidResults, middeskResults, cipOutputPath, endDate);
+    await writeCipCsv(plaidResults, middeskResults, cipOutputPath, endDate, showSensitiveData);
 
     console.log("\nAll exports completed successfully!");
   } catch (error) {

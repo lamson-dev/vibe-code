@@ -8,17 +8,77 @@
 </head>
 <body>
     <header>
-        <h1>My Skills Wallet</h1>
+        <h1>My Advanced Skills Wallet</h1>
     </header>
 
     <main>
-        <carousel>
-            <div class="skill-item">Snowboarding</div>
-            <div class="skill-item">Coffee Making</div>
-            <div class="skill-item">Development</div>
-            <div class="skill-item">Problem Solving</div>
-            <div class="skill-item">Project Management</div>
-        </carousel>
+        <div role="region" aria-label="Skills Carousel" class="carousel-container">
+            <div class="carousel">
+                <div class="carousel__slide" data-label="Skill 1">
+                    <article class="card">
+                        <figure>
+                            <picture>
+                                <img src="https://via.placeholder.com/300x200.png?text=Snowboarding" alt="Snowboarding skill placeholder image" height="200" width="300">
+                            </picture>
+                            <figcaption>
+                                <h5>Snowboarding</h5>
+                                <p>Riding down slopes with style and managing various snow conditions.</p>
+                                <a href="#">Learn more</a>
+                            </figcaption>
+                        </figure>
+                    </article>
+                </div>
+
+                <div class="carousel__slide" data-label="Skill 2">
+                    <article class="card">
+                        <figure>
+                            <picture>
+                                <img src="https://via.placeholder.com/300x200.png?text=Coffee+Making" alt="Coffee Making skill placeholder image" height="200" width="300">
+                            </picture>
+                            <figcaption>
+                                <h5>Coffee Making</h5>
+                                <p>Brewing the perfect cup, from espresso to pour-over, at the right temperature.</p>
+                                <a href="#">Learn more</a>
+                            </figcaption>
+                        </figure>
+                    </article>
+                </div>
+
+                <div class="carousel__slide" data-label="Skill 3">
+                    <article class="card">
+                        <figure>
+                            <picture>
+                                <img src="https://via.placeholder.com/300x200.png?text=Development" alt="Development skill placeholder image" height="200" width="300">
+                            </picture>
+                            <figcaption>
+                                <h5>Web Development</h5>
+                                <p>Building modern, responsive websites and web applications.</p>
+                                <a href="#">Learn more</a>
+                            </figcaption>
+                        </figure>
+                    </article>
+                </div>
+
+                <div class="carousel__slide" data-label="Skill 4">
+                    <article class="card">
+                        <figure>
+                            <picture>
+                                <img src="https://via.placeholder.com/300x200.png?text=Cooking" alt="Cooking skill placeholder image" height="200" width="300">
+                            </picture>
+                            <figcaption>
+                                <h5>Culinary Arts</h5>
+                                <p>Creating delicious and visually appealing dishes from various cuisines.</p>
+                                <a href="#">Learn more</a>
+                            </figcaption>
+                        </figure>
+                    </article>
+                </div>
+            </div>
+            <div class="carousel-controls">
+              <button class="carousel-button prev" aria-label="Previous skill">&lt;</button>
+              <button class="carousel-button next" aria-label="Next skill">&gt;</button>
+            </div>
+        </div>
     </main>
 
     <footer>

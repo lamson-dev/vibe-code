@@ -1,53 +1,217 @@
+/* General Page Styles */
 body {
-    font-family: sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     margin: 0;
-    background-color: #f4f4f4;
-    color: #333;
+    background-color: #f0f2f5;
+    color: #1c1e21;
+    line-height: 1.6;
 }
 
 header {
-    background-color: #333;
-    color: #fff;
-    padding: 1rem 0;
+    background-color: #4a90e2; /* Brighter blue */
+    color: #ffffff;
+    padding: 1.5rem 0;
     text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
 }
 
 main {
-    padding: 1rem;
-    display: flex; /* Using flex to center carousel if it behaves like a block */
-    justify-content: center; /* Center carousel horizontally */
-    align-items: center; /* Center carousel vertically if main has a defined height */
-    min-height: calc(100vh - 160px); /* Example height: viewport height minus header/footer */
-}
-
-/* Basic styling for the experimental carousel */
-carousel {
-    display: flex; /* Allow items to sit side-by-side */
-    overflow-x: auto; /* Allow horizontal scrolling */
-    gap: 1rem; /* Space between items */
-    padding: 1rem;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    width: 80%; /* Example width */
-    max-width: 600px; /* Max width for the carousel */
-}
-
-.skill-item {
-    border: 1px solid #ddd;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    background-color: #e9e9e9;
-    text-align: center;
-    min-width: 120px; /* Give items a minimum width */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 2rem 1rem; /* More padding */
+    display: flex;
+    flex-direction: column; /* Stack carousel and controls */
+    align-items: center; /* Center carousel container */
 }
 
 footer {
     text-align: center;
-    padding: 1rem 0;
+    padding: 1.5rem 0;
     background-color: #333;
     color: #fff;
-    position: relative; /* Changed from fixed to relative for normal flow */
-    bottom: 0;
+    margin-top: 2rem; /* Space above footer */
+}
+
+/* Carousel Container & Controls */
+.carousel-container {
     width: 100%;
+    max-width: 900px; /* Max width for the carousel */
+    position: relative; /* For positioning buttons */
+}
+
+.carousel {
+    display: flex;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    scroll-snap-type: x mandatory; /* Snap scrolling horizontally */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    padding: 1rem 0; /* Padding for items inside */
+    list-style: none; /* Remove list styles if it were a ul/ol */
+    margin: 0;
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #4a90e2 #e0e0e0; /* Firefox */
+}
+
+/* For Webkit browsers like Chrome, Safari */
+.carousel::-webkit-scrollbar {
+    height: 8px;
+}
+.carousel::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 4px;
+}
+.carousel::-webkit-scrollbar-thumb {
+    background-color: #4a90e2;
+    border-radius: 4px;
+}
+
+.carousel__slide {
+    flex: 0 0 auto; /* Prevent slides from shrinking/growing */
+    width: 80%; /* Each slide takes up 80% of the carousel width */
+    max-width: 320px; /* Max width of a slide */
+    scroll-snap-align: center; /* Snap slides to the center */
+    margin-right: 1rem; /* Space between slides */
+    opacity: 0.7; /* Dim non-active slides slightly */
+    transform: scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.carousel__slide:last-child {
+    margin-right: 0;
+}
+
+/* Add class via JS for snapped slide or use :hover/:focus for simplicity if not using JS for state */
+.carousel__slide.is-snapped, /* Hypothetical class, can be controlled with JS or :hover */
+.carousel__slide:hover { /* Simple hover effect for now */
+    opacity: 1;
+    transform: scale(1);
+}
+
+
+/* Card Styling */
+.card {
+    background-color: #ffffff;
+    border-radius: 12px; /* More rounded corners */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Softer, more prominent shadow */
+    overflow: hidden; /* Ensure content respects border radius */
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Make card take full height of slide */
+}
+
+.card figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allow figure to grow */
+}
+
+.card picture img {
+    width: 100%;
+    height: 200px; /* Fixed height for images */
+    object-fit: cover; /* Cover the area, cropping if necessary */
+    display: block;
+}
+
+.card figcaption {
+    padding: 1rem;
+    flex-grow: 1; /* Allow figcaption to take remaining space */
+    display: flex;
+    flex-direction: column;
+}
+
+.card h5 {
+    font-size: 1.25rem;
+    margin: 0 0 0.5rem 0;
+    color: #333;
+}
+
+.card p {
+    font-size: 0.9rem;
+    color: #555;
+    flex-grow: 1; /* Allow paragraph to expand */
+    margin-bottom: 1rem;
+}
+
+.card a {
+    display: inline-block;
+    background-color: #4a90e2;
+    color: #ffffff;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+    margin-top: auto; /* Push link to bottom of card */
+}
+
+.card a:hover, .card a:focus {
+    background-color: #357abd; /* Darker blue on hover */
+}
+
+/* Carousel Controls Styling */
+.carousel-controls {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.carousel-button {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    border-radius: 50%; /* Circular buttons */
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 0 0.5rem;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    width: 50px; /* Fixed width */
+    height: 50px; /* Fixed height */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.carousel-button:hover, .carousel-button:focus {
+    background-color: #357abd;
+    transform: scale(1.1);
+}
+
+.carousel-button:active {
+    transform: scale(1.05);
+}
+
+
+/* Basic Responsiveness */
+@media (max-width: 768px) {
+    .carousel__slide {
+        width: 90%; /* Slides take more width on smaller screens */
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel__slide {
+        width: 95%;
+    }
+    .card h5 {
+        font-size: 1.1rem;
+    }
+    .card p {
+        font-size: 0.85rem;
+    }
+    .carousel-button {
+        padding: 0.6rem 1rem;
+        font-size: 1rem;
+        width: 40px;
+        height: 40px;
+    }
 }

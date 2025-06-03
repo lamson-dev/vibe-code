@@ -1,0 +1,53 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+main {
+    padding: 1rem;
+    display: flex; /* Using flex to center carousel if it behaves like a block */
+    justify-content: center; /* Center carousel horizontally */
+    align-items: center; /* Center carousel vertically if main has a defined height */
+    min-height: calc(100vh - 160px); /* Example height: viewport height minus header/footer */
+}
+
+/* Basic styling for the experimental carousel */
+carousel {
+    display: flex; /* Allow items to sit side-by-side */
+    overflow-x: auto; /* Allow horizontal scrolling */
+    gap: 1rem; /* Space between items */
+    padding: 1rem;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    width: 80%; /* Example width */
+    max-width: 600px; /* Max width for the carousel */
+}
+
+.skill-item {
+    border: 1px solid #ddd;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    background-color: #e9e9e9;
+    text-align: center;
+    min-width: 120px; /* Give items a minimum width */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+footer {
+    text-align: center;
+    padding: 1rem 0;
+    background-color: #333;
+    color: #fff;
+    position: relative; /* Changed from fixed to relative for normal flow */
+    bottom: 0;
+    width: 100%;
+}
